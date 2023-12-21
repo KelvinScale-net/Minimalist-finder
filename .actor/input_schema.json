@@ -1,0 +1,30 @@
+{
+    "title": "GPTs-scraper Input Schema",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "gptsUrls": {
+            "title": "Apps url(s)",
+            "type": "array",
+            "description": "Url of the GPTs you want to crawl, leave empty to crawl the latest 400 GPTs from Google SERP",
+            "editor": "requestListSources"
+        },
+        "maxItems": {
+            "title": "Max items",
+            "type": "integer",
+            "description": "Maximum number of apps you want to scrape, scrape all if not set.",
+            "editor": "number"
+        },
+        "proxyConfiguration": {
+            "title": "Proxy configuration",
+            "type": "object",
+            "description": "Select proxies to be used by your crawler.",
+            "prefill": {
+                "useApifyProxy": true,
+                "apifyProxyCountry": "US"
+            },
+            "editor": "proxy"
+        }
+    },
+    "required": []
+}

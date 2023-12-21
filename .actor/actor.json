@@ -1,0 +1,13 @@
+{
+
+	"actorSpecification": 1,
+	"name": "GPTs-scraper",
+	"title": "GPTs-scraper",
+	"description": "Use this scrapper to collect data about GPTs url, title, description and more.",
+	"version": "0.0",
+	"meta": {
+		"templateId": "ts-crawlee-cheerio"
+	},
+	"input": "./input_schema.json",
+	"dockerfile": "./Dockerfile"
+}
