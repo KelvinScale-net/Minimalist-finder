@@ -5,6 +5,7 @@ import fs from 'fs'
 import { GPTS } from './types';
 
 interface Input {
+    maxItems: number;
     gptsUrls: string[]
     proxyConfiguration: ProxyConfigurationOptions
 }
@@ -12,8 +13,10 @@ interface Input {
 // The init() call configures the Actor for its environment. It's recommended to start every Actor with an init()
 await Actor.init();
 
+
+
 // Structure of input is defined in input_schema.json
-const { gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
+const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
 
 const selectors: { [key: string]: string } = {
     url: 'a[href]',
@@ -23,18 +26,13 @@ const selectors: { [key: string]: string } = {
     next: 'a[aria-label="More results"]',
 };
 
+
 const BASEURL = 'https://www.google.com'
 
 let urls: string[] = []
 let currentPage = 0
 
 const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
-
-// Añade la función de filtrado
-function containsOnlyLatin(text: string): boolean {
-    const nonLatinRegex = /[^\u0000-\u007F]+/;
-    return !nonLatinRegex.test(text);
-}
 
 if (!gptsUrls) {
     const googleCrawler = new CheerioCrawler({
@@ -48,6 +46,7 @@ if (!gptsUrls) {
                 })
 
             urls.push(...links)
+
 
             const nextPage = $(selectors['next']).attr('href')
             if (!nextPage) {
@@ -78,6 +77,8 @@ if (!gptsUrls) {
     urls = gptsUrls
 }
 
+
+
 const crawler = new CheerioCrawler({
     proxyConfiguration,
     minConcurrency: 1,
@@ -102,26 +103,28 @@ const crawler = new CheerioCrawler({
         const json = JSON.parse(element.html() || '') as GPTS;
         const { author, display, id } = json.props.pageProps.gizmo.gizmo
 
-        // Aplica el filtro a los elementos recogidos
-        if (containsOnlyLatin(display.name)) {
-            await Actor.pushData({
-                title: display.name,
-                author: author.display_name,
-                description: display.description,
-                logoUrl: display.profile_picture_url,
-                welcomeMessage: display.welcome_message,
-                id: id,
-                url: request.loadedUrl
-            });
-        }
+        await Actor.pushData({
+            title: display.name,
+            author: author.display_name,
+            description: display.description,
+            logoUrl: display.profile_picture_url,
+            welcomeMessage: display.welcome_message,
+            id: id,
+            url: request.loadedUrl
+        });
     },
     failedRequestHandler({ request }) {
         log.error(`Request for url ${request.url} failed.`);
     }
 });
 
-// Run the crawler on the collected URLs
-await crawler.run(urls);
+// Reduce the number of apps to crawl
+//if (maxItems && maxItems > 0) {
+//    urls = urls.slice(0, maxItems);
+//}
 
-// Exit the actor
+await crawler.run(urls);
+// for testing
+// await crawler.run(['https://chat.openai.com/g/g-N1SJLto6i-elsa']);
+
 await Actor.exit();
