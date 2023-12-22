@@ -18,12 +18,16 @@ await Actor.init();
 // Structure of input is defined in input_schema.json
 const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
 
-const selectors: { [key: string]: string } = {
-    url: 'a[href]',
-    title: 'a',
-    text: 'span > span',
-    links: 'div#search div[class=g]',
-    next: 'a[aria-label="More results"]',
+const selectors = {
+    logo: '.logo-container .logo img',
+    title: '.title',
+    author: '.type-author-time .author span',
+    description: '.bx--snippet--multi pre code',
+    conversationStarters: '.bx--snippet--wraptext pre code',
+    views: '.stats-icons .icon-wrapper[title^="Views:"] span:last-child',
+    usages: '.stats-icons .icon-wrapper[title^="Usages:"] span:last-child',
+    votes: '.stats-icons .icon-wrapper[title^="Votes:"] span:last-child',
+    tryButton: '.chatgpt-try-button a'
 };
 
 
@@ -98,30 +102,41 @@ const crawler = new CheerioCrawler({
     },
     useSessionPool: true,
 
-    requestHandler: async ({ $, request }) => {
-        const element = $('#__NEXT_DATA__');
-        const json = JSON.parse(element.html() || '') as GPTS;
-        const { author, display, id } = json.props.pageProps.gizmo.gizmo
 
-        await Actor.pushData({
-            title: display.name,
-            author: author.display_name,
-            description: display.description,
-            logoUrl: display.profile_picture_url,
-            welcomeMessage: display.welcome_message,
-            id: id,
-            url: request.loadedUrl
-        });
-    },
+// Modificar el requestHandler
+const requestHandler = async ({ $, request }) => {
+    // Utiliza los selectores para extraer los datos
+    const data = {
+        title: $(selectors.title).text(),
+        author: $(selectors.author).text(),
+        description: $(selectors.description).text(),
+        logoUrl: $(selectors.logo).attr('src'),
+        conversationStarters: $(selectors.conversationStarters).text(),
+        views: $(selectors.views).text(),
+        usages: $(selectors.usages).text(),
+        votes: $(selectors.votes).text(),
+        tryButtonUrl: $(selectors.tryButton).attr('href'),
+        id: request.id, // o cualquier otra lógica para obtener el id
+        url: request.loadedUrl
+    };
+
+    await Actor.pushData(data);
+};
+
+// Configuración del CheerioCrawler
+const crawler = new CheerioCrawler({
+    // ...
+    requestHandler,
+    // ...
     failedRequestHandler({ request }) {
         log.error(`Request for url ${request.url} failed.`);
     }
 });
 
 // Reduce the number of apps to crawl
-//if (maxItems && maxItems > 0) {
-//    urls = urls.slice(0, maxItems);
-//}
+if (maxItems && maxItems > 0) {
+    urls = urls.slice(0, maxItems);
+}
 
 await crawler.run(urls);
 // for testing
