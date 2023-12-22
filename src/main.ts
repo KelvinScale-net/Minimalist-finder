@@ -1,8 +1,7 @@
 import { Actor, ProxyConfigurationOptions } from 'apify';
-import { CheerioCrawler, log } from 'crawlee';
+import { CheerioCrawler, log, CheerioRoot, Request } from 'crawlee';
 import fs from 'fs';
 import { GPTS } from './types';
-import { CheerioCrawler, CheerioRoot, Request } from 'crawlee';
 
 interface Input {
     maxItems: number;
