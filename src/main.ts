@@ -29,7 +29,7 @@ let urls: string[] = gptsUrls ?? [];
 
 const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
 
-const requestHandler = async ({ $, request }) => {
+const requestHandler = async ({ $, request }): Promise<void> => {
     const data = {
         title: $(selectors.title).text(),
         author: $(selectors.author).text(),
