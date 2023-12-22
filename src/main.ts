@@ -2,6 +2,7 @@ import { Actor, ProxyConfigurationOptions } from 'apify';
 import { CheerioCrawler, log } from 'crawlee';
 import fs from 'fs';
 import { GPTS } from './types';
+import { CheerioCrawler, CheerioRoot, Request } from 'crawlee';
 
 interface Input {
     maxItems: number;
@@ -29,7 +30,7 @@ let urls: string[] = gptsUrls ?? [];
 
 const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
 
-const requestHandler = async ({ $, request }): Promise<void> => {
+const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
     const data = {
         title: $(selectors.title).text(),
         author: $(selectors.author).text(),
