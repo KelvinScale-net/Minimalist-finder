@@ -34,11 +34,11 @@ const preNavigationHook = async (requestAsBrowserOptions: any) => {
 };
 
 const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
-    const logoUrl = $(selectors.logo).attr('src');
-    const title = $(selectors.title).text();
-    const author = $(selectors.author).text();
-    const description = $(selectors.description).text();
-    const conversationStarters = $(selectors.conversationStarters).text();
+    const logoUrl = $('.logo-container .logo img').attr('src');
+    const title = $('.title').text();
+    const author = $('.type-author-time .author span').text();
+    const description = $('.bx--snippet--multi pre code').first().text();
+    const conversationStarters = $('.bx--snippet--wraptext pre code').text();
     const views = $(selectors.views).text();
     const usages = $(selectors.usages).text();
     const votes = $(selectors.votes).text();
