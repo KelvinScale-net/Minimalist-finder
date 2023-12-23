@@ -1,4 +1,6 @@
-import { Actor, ProxyConfigurationOptions, launchPuppeteer, pushData } from 'apify';
+import { Actor, ProxyConfigurationOptions } from 'apify';
+import { launchPuppeteer } from 'apify/puppeteer';
+import { pushData } from 'apify/actor';
 import fs from 'fs';
 import { GPTS } from './types';
 
