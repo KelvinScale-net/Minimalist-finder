@@ -1,72 +1,45 @@
-import { Actor, ProxyConfigurationOptions } from 'apify';
-import { CheerioCrawler, log, CheerioRoot, Request } from 'crawlee';
-import fs from 'fs';
-import { GPTS } from './types';
+const Apify = require('apify');
 
-interface Input {
-    maxItems: number;
-    gptsUrls: string[];
-    proxyConfiguration: ProxyConfigurationOptions;
-}
+Apify.main(async () => {
+    const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Apify.getInput();
 
-await Actor.init();
+    const urls = gptsUrls ?? [];
+    const proxyConfiguration = await Apify.createProxyConfiguration(proxyConfigurationOptions);
 
-const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
+    const browser = await Apify.launchPuppeteer({ proxyConfiguration });
 
-const selectors = {
-    logo: '.logo-container .logo img',
-    title: '.title',
-    author: '.type-author-time .author span',
-    description: '.bx--snippet--multi pre code',
-    conversationStarters: '.bx--snippet--wraptext pre code',
-    views: '.stats-icons .icon-wrapper[title^="Views:"] span:last-child',
-    usages: '.stats-icons .icon-wrapper[title^="Usages:"] span:last-child',
-    votes: '.stats-icons .icon-wrapper[title^="Votes:"] span:last-child',
-    tryButton: '.chatgpt-try-button a'
-};
+    for (const url of urls.slice(0, maxItems || urls.length)) {
+        const page = await browser.newPage();
+        await page.goto(url, { waitUntil: 'networkidle0' });
 
-let urls: string[] = gptsUrls ?? [];
+        const data = await page.evaluate(() => {
+            const logo = document.querySelector('.logo-container .logo img')?.src;
+            const title = document.querySelector('.title')?.innerText;
+            const author = document.querySelector('.type-author-time .author span')?.innerText;
+            const description = Array.from(document.querySelectorAll('.bx--snippet--multi pre code')).map(el => el.innerText).join('\n');
+            const conversationStarters = Array.from(document.querySelectorAll('.bx--snippet--wraptext pre code')).map(el => el.innerText).join('\n');
+            const views = document.querySelector('.stats-icons .icon-wrapper[title^="Views:"] span:last-child')?.innerText;
+            const usages = document.querySelector('.stats-icons .icon-wrapper[title^="Usages:"] span:last-child')?.innerText;
+            const votes = document.querySelector('.stats-icons .icon-wrapper[title^="Votes:"] span:last-child')?.innerText;
+            const tryButtonUrl = document.querySelector('.chatgpt-try-button a')?.href;
 
-const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
+            return {
+                logo,
+                title,
+                author,
+                description,
+                conversationStarters,
+                views,
+                usages,
+                votes,
+                tryButtonUrl,
+                url
+            };
+        });
 
-const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
-    const logoUrl = $('.logo img').attr('src');
-    const title = $(selectors.title).text();
-    const author = $(selectors.author).text();
-    const description = $('.bx--snippet--multi pre code').first().text();
-    const conversationStarters = $('.bx--snippet--wraptext pre code').text();
-    const views = $(selectors.views).text();
-    const usages = $(selectors.usages).text();
-    const votes = $(selectors.votes).text();
-    const tryButtonUrl = $(selectors.tryButton).attr('href');
-
-    const data = {
-        title,
-        author,
-        description,
-        conversationStarters,
-        logoUrl,
-        views,
-        usages,
-        votes,
-        tryButtonUrl,
-        url: request.loadedUrl
-    };
-
-    await Actor.pushData(data);
-};
-
-const crawler = new CheerioCrawler({
-    proxyConfiguration,
-    requestHandler,
-    failedRequestHandler({ request }) {
-        log.error(`Request for url ${request.url} failed.`);
+        await Apify.pushData(data);
+        await page.close();
     }
+
+    await browser.close();
 });
-
-/*if (maxItems && maxItems > 0) {
-    urls = urls.slice(0, maxItems);
-}*/
-
-await crawler.run(urls);
-await Actor.exit();
