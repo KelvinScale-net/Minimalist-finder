@@ -30,7 +30,7 @@ const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurati
 
 const preNavigationHook = async (crawlingContext: any, requestAsBrowserOptions: any) => {
     requestAsBrowserOptions.waitUntil = 'domcontentloaded';
-    await new Promise(resolve => setTimeout(resolve, 5000)); // Espera de 5 segundos
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Espera de 5 segundos
 };
 
 const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
