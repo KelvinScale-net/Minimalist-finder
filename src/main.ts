@@ -30,16 +30,26 @@ let urls: string[] = gptsUrls ?? [];
 const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
 
 const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
+    const logoUrl = $('.logo img').attr('src');
+    const title = $(selectors.title).text();
+    const author = $(selectors.author).text();
+    const description = $('.bx--snippet--multi pre code').first().text();
+    const conversationStarters = $('.bx--snippet--wraptext pre code').text();
+    const views = $(selectors.views).text();
+    const usages = $(selectors.usages).text();
+    const votes = $(selectors.votes).text();
+    const tryButtonUrl = $(selectors.tryButton).attr('href');
+
     const data = {
-        title: $(selectors.title).text(),
-        author: $(selectors.author).text(),
-        description: $(selectors.description).text(),
-        logoUrl: $(selectors.logo).attr('src'),
-        conversationStarters: $(selectors.conversationStarters).text(),
-        views: $(selectors.views).text(),
-        usages: $(selectors.usages).text(),
-        votes: $(selectors.votes).text(),
-        tryButtonUrl: $(selectors.tryButton).attr('href'),
+        title,
+        author,
+        description,
+        conversationStarters,
+        logoUrl,
+        views,
+        usages,
+        votes,
+        tryButtonUrl,
         url: request.loadedUrl
     };
 
