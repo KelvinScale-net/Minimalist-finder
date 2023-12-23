@@ -1,4 +1,6 @@
-import { Actor, launchPuppeteer, pushData, createProxyConfiguration, ProxyConfigurationOptions } from 'apify';
+import { Actor, ProxyConfigurationOptions } from 'apify';
+import { CheerioCrawler, log, CheerioRoot, Request } from 'crawlee';
+import { GPTS } from './types';
 
 interface Input {
     maxItems: number;
@@ -8,47 +10,64 @@ interface Input {
 
 await Actor.init();
 
-const input = await Actor.getInput<Input>() ?? {} as Input;
-const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = input;
+const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
 
-const urls: string[] = gptsUrls ?? [];
+const selectors = {
+    logo: '.logo-container .logo img',
+    title: '.title',
+    author: '.type-author-time .author span',
+    description: '.bx--snippet--multi pre code',
+    conversationStarters: '.bx--snippet--wraptext pre code',
+    views: '.stats-icons .icon-wrapper[title^="Views:"] span:last-child',
+    usages: '.stats-icons .icon-wrapper[title^="Usages:"] span:last-child',
+    votes: '.stats-icons .icon-wrapper[title^="Votes:"] span:last-child',
+    tryButton: '.chatgpt-try-button a'
+};
 
-const proxyConfiguration = await createProxyConfiguration(proxyConfigurationOptions);
+let urls: string[] = gptsUrls ?? [];
 
-const browser = await launchPuppeteer({ proxyConfiguration });
+const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
 
-for (const url of urls.slice(0, maxItems || urls.length)) {
-    const page = await browser.newPage();
-    await page.goto(url, { waitUntil: 'networkidle0' });
+const preNavigationHook = async (crawlingContext: any, requestAsBrowserOptions: any) => {
+    requestAsBrowserOptions.waitUntil = 'domcontentloaded';
+    await new Promise(resolve => setTimeout(resolve, 5000)); // Espera de 5 segundos
+};
 
-    const data = await page.evaluate(() => {
-        const logo = (document.querySelector('.logo-container .logo img') as HTMLImageElement)?.src;
-        const title = (document.querySelector('.title') as HTMLElement)?.innerText;
-        const author = (document.querySelector('.type-author-time .author span') as HTMLElement)?.innerText;
-        const description = (document.querySelector('.bx--snippet--multi pre code') as HTMLElement)?.innerText;
-        const conversationStarters = (document.querySelector('.bx--snippet--wraptext pre code') as HTMLElement)?.innerText;
-        const views = (document.querySelector('.stats-icons .icon-wrapper[title^="Views:"] span:last-child') as HTMLElement)?.innerText;
-        const usages = (document.querySelector('.stats-icons .icon-wrapper[title^="Usages:"] span:last-child') as HTMLElement)?.innerText;
-        const votes = (document.querySelector('.stats-icons .icon-wrapper[title^="Votes:"] span:last-child') as HTMLElement)?.innerText;
-        const tryButtonUrl = (document.querySelector('.chatgpt-try-button a') as HTMLAnchorElement)?.href;
+const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
+    const logoUrl = $(selectors.logo).attr('src');
+    const title = $(selectors.title).text();
+    const author = $(selectors.author).text();
+    const description = $(selectors.description).text();
+    const conversationStarters = $(selectors.conversationStarters).text();
+    const views = $(selectors.views).text();
+    const usages = $(selectors.usages).text();
+    const votes = $(selectors.votes).text();
+    const tryButtonUrl = $(selectors.tryButton).attr('href');
 
-        return {
-            logo,
-            title,
-            author,
-            description,
-            conversationStarters,
-            views,
-            usages,
-            votes,
-            tryButtonUrl,
-            url
-        };
-    });
+    const data = {
+        title,
+        author,
+        description,
+        conversationStarters,
+        logoUrl,
+        views,
+        usages,
+        votes,
+        tryButtonUrl,
+        url: request.loadedUrl
+    };
 
-    await pushData(data);
-    await page.close();
-}
+    await Actor.pushData(data);
+};
 
-await browser.close();
+const crawler = new CheerioCrawler({
+    proxyConfiguration,
+    requestHandler,
+    preNavigationHooks: [preNavigationHook],
+    failedRequestHandler({ request }) {
+        log.error(`Request for url ${request.url} failed.`);
+    }
+});
+
+await crawler.run(urls);
 await Actor.exit();
