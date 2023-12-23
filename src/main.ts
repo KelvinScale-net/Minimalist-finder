@@ -1,4 +1,4 @@
-import Apify from 'apify';
+import { Actor, launchPuppeteer, pushData, createProxyConfiguration } from 'apify';
 
 Apify.main(async () => {
     const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Apify.getInput<Input>() ?? {} as Input;
