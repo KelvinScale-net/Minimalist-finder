@@ -1,8 +1,4 @@
-import { Actor, ProxyConfigurationOptions } from 'apify';
-import { launchPuppeteer } from 'apify/puppeteer';
-import { pushData } from 'apify/actor';
-import fs from 'fs';
-import { GPTS } from './types';
+import { Actor, launchPuppeteer, pushData, createProxyConfiguration, ProxyConfigurationOptions } from 'apify';
 
 interface Input {
     maxItems: number;
@@ -17,7 +13,7 @@ const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = in
 
 const urls: string[] = gptsUrls ?? [];
 
-const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
+const proxyConfiguration = await createProxyConfiguration(proxyConfigurationOptions);
 
 const browser = await launchPuppeteer({ proxyConfiguration });
 
@@ -29,8 +25,8 @@ for (const url of urls.slice(0, maxItems || urls.length)) {
         const logo = (document.querySelector('.logo-container .logo img') as HTMLImageElement)?.src;
         const title = (document.querySelector('.title') as HTMLElement)?.innerText;
         const author = (document.querySelector('.type-author-time .author span') as HTMLElement)?.innerText;
-        const description = Array.from(document.querySelectorAll('.bx--snippet--multi pre code')).map(el => (el as HTMLElement).innerText).join('\n');
-        const conversationStarters = Array.from(document.querySelectorAll('.bx--snippet--wraptext pre code')).map(el => (el as HTMLElement).innerText).join('\n');
+        const description = (document.querySelector('.bx--snippet--multi pre code') as HTMLElement)?.innerText;
+        const conversationStarters = (document.querySelector('.bx--snippet--wraptext pre code') as HTMLElement)?.innerText;
         const views = (document.querySelector('.stats-icons .icon-wrapper[title^="Views:"] span:last-child') as HTMLElement)?.innerText;
         const usages = (document.querySelector('.stats-icons .icon-wrapper[title^="Usages:"] span:last-child') as HTMLElement)?.innerText;
         const votes = (document.querySelector('.stats-icons .icon-wrapper[title^="Votes:"] span:last-child') as HTMLElement)?.innerText;
