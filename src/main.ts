@@ -1,9 +1,10 @@
-const Apify = require('apify');
+import Apify from 'apify';
 
 Apify.main(async () => {
-    const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Apify.getInput();
+    const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Apify.getInput<Input>() ?? {} as Input;
 
-    const urls = gptsUrls ?? [];
+    const urls: string[] = gptsUrls ?? [];
+
     const proxyConfiguration = await Apify.createProxyConfiguration(proxyConfigurationOptions);
 
     const browser = await Apify.launchPuppeteer({ proxyConfiguration });
@@ -13,15 +14,15 @@ Apify.main(async () => {
         await page.goto(url, { waitUntil: 'networkidle0' });
 
         const data = await page.evaluate(() => {
-            const logo = document.querySelector('.logo-container .logo img')?.src;
-            const title = document.querySelector('.title')?.innerText;
-            const author = document.querySelector('.type-author-time .author span')?.innerText;
-            const description = Array.from(document.querySelectorAll('.bx--snippet--multi pre code')).map(el => el.innerText).join('\n');
-            const conversationStarters = Array.from(document.querySelectorAll('.bx--snippet--wraptext pre code')).map(el => el.innerText).join('\n');
-            const views = document.querySelector('.stats-icons .icon-wrapper[title^="Views:"] span:last-child')?.innerText;
-            const usages = document.querySelector('.stats-icons .icon-wrapper[title^="Usages:"] span:last-child')?.innerText;
-            const votes = document.querySelector('.stats-icons .icon-wrapper[title^="Votes:"] span:last-child')?.innerText;
-            const tryButtonUrl = document.querySelector('.chatgpt-try-button a')?.href;
+            const logo = (document.querySelector('.logo-container .logo img') as HTMLImageElement)?.src;
+            const title = (document.querySelector('.title') as HTMLElement)?.innerText;
+            const author = (document.querySelector('.type-author-time .author span') as HTMLElement)?.innerText;
+            const description = Array.from(document.querySelectorAll('.bx--snippet--multi pre code')).map(el => (el as HTMLElement).innerText).join('\n');
+            const conversationStarters = Array.from(document.querySelectorAll('.bx--snippet--wraptext pre code')).map(el => (el as HTMLElement).innerText).join('\n');
+            const views = (document.querySelector('.stats-icons .icon-wrapper[title^="Views:"] span:last-child') as HTMLElement)?.innerText;
+            const usages = (document.querySelector('.stats-icons .icon-wrapper[title^="Usages:"] span:last-child') as HTMLElement)?.innerText;
+            const votes = (document.querySelector('.stats-icons .icon-wrapper[title^="Votes:"] span:last-child') as HTMLElement)?.innerText;
+            const tryButtonUrl = (document.querySelector('.chatgpt-try-button a') as HTMLAnchorElement)?.href;
 
             return {
                 logo,
