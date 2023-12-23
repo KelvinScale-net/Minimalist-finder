@@ -28,7 +28,7 @@ let urls: string[] = gptsUrls ?? [];
 
 const proxyConfiguration = await Actor.createProxyConfiguration(proxyConfigurationOptions);
 
-const preNavigationHook = async (crawlingContext: any, requestAsBrowserOptions: any) => {
+const preNavigationHook = async (requestAsBrowserOptions: any) => {
     requestAsBrowserOptions.waitUntil = 'domcontentloaded';
     await new Promise(resolve => setTimeout(resolve, 2000)); // Espera de 5 segundos
 };
