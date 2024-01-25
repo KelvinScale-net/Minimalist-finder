@@ -13,15 +13,13 @@ await Actor.init();
 const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
 
 const selectors = {
-    logo: '.logo-container .logo img',
-    title: '.title',
-    author: '.type-author-time .author span',
-    description: '.bx--snippet--multi pre code',
-    conversationStarters: '.bx--snippet--wraptext pre code',
-    views: '.stats-icons .icon-wrapper[title^="Views:"] span:last-child',
-    usages: '.stats-icons .icon-wrapper[title^="Usages:"] span:last-child',
-    votes: '.stats-icons .icon-wrapper[title^="Votes:"] span:last-child',
-    tryButton: '.chatgpt-try-button a'
+    title: '.text-5xl.font-semibold.text-darkBlue',
+    description: '.mt-2.text-slate-600',
+    category: '.hover\\:underline',
+    update: '.flex.gap-2.rounded-full.bg-slate-100.px-4.py-2.text-slate-600',
+    tag: '.flex.gap-2.rounded-full.bg-slate-100.px-4.py-2.text-slate-600', // Nota: mismo selector que 'update', verifica si es correcto
+    video: '.order-1.flex.w-full.flex-col.gap-4.lg\\:order-2',
+    detail: '.prose-base.prose-slate.prose-invert.prose-headings\\:scroll-m-24.prose-headings\\:font-bold.prose-headings\\:text-slate-800.prose-headings\\:text-opacity-90.prose-p\\:text-slate-800.prose-p\\:text-opacity-80.prose-a\\:underline.prose-a\\:decoration-inherit.prose-ol\\:list-decimal.prose-ol\\:text-slate-800.prose-ol\\:text-opacity-80.prose-ul\\:list-disc.prose-ul\\:text-slate-800.prose-ul\\:text-opacity-80'
 };
 
 let urls: string[] = gptsUrls ?? [];
@@ -34,29 +32,25 @@ const preNavigationHook = async (requestAsBrowserOptions: any) => {
 };
 
 const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
-    const logoUrl = $('.logo-container .logo img').attr('src');
-    const title = $('.title').text();
-    const author = $('.type-author-time .author span').text();
-    const description = $('.bx--snippet--multi pre code').first().text();
-    const conversationStarters = $('.bx--snippet--wraptext pre code').text();
-    const views = $(selectors.views).text();
-    const usages = $(selectors.usages).text();
-    const votes = $(selectors.votes).text();
-    const tryButtonUrl = $(selectors.tryButton).attr('href');
+    // Utiliza los selectores actualizados para extraer la información
+    const title = $(selectors.title).text();
+    const description = $(selectors.description).text();
+    const category = $(selectors.category).text();
+    const update = $(selectors.update).text();
+    const tag = $(selectors.tag).text();
+    const videoUrl = $(selectors.video).find('video').attr('src'); // Asumiendo que quieres la URL del video
+    const detail = $(selectors.detail).text();
 
     const data = {
         title,
-        author,
         description,
-        conversationStarters,
-        logoUrl,
-        views,
-        usages,
-        votes,
-        tryButtonUrl,
+        category,
+        update,
+        tag,
+        videoUrl,
+        detail,
         url: request.loadedUrl
     };
-
     await Actor.pushData(data);
 };
 
