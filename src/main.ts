@@ -13,13 +13,15 @@ await Actor.init();
 const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
 
 const selectors = {
-    title: '.text-5xl.font-semibold.text-darkBlue',
-    description: '.mt-2.text-slate-600',
-    category: '.hover\\:underline',
-    update: '.flex.gap-2.rounded-full.bg-slate-100.px-4.py-2.text-slate-600',
-    tag: '.flex.gap-2.rounded-full.bg-slate-100.px-4.py-2.text-slate-600', // Nota: mismo selector que 'update', verifica si es correcto
-    video: '.order-1.flex.w-full.flex-col.gap-4.lg\\:order-2',
-    detail: '.prose-base.prose-slate.prose-invert.prose-headings\\:scroll-m-24.prose-headings\\:font-bold.prose-headings\\:text-slate-800.prose-headings\\:text-opacity-90.prose-p\\:text-slate-800.prose-p\\:text-opacity-80.prose-a\\:underline.prose-a\\:decoration-inherit.prose-ol\\:list-decimal.prose-ol\\:text-slate-800.prose-ol\\:text-opacity-80.prose-ul\\:list-disc.prose-ul\\:text-slate-800.prose-ul\\:text-opacity-80'
+    logo: 'img.object-fill',
+    description: 'p.mt-2.text-slate-600',
+    category: '.mt-2 a.hover\\:underline',
+    update: 'div.rounded-full:nth-of-type(1)',
+    trial: 'div.rounded-full:nth-of-type(2)',
+    linkToTool: 'button.bg-ice-500.rounded-full.flex',
+    favorites: 'button.hover\\:bg-ice-600.border',
+    detail: '.mx-auto div div.mx-auto.px-4',
+    videoIframe: '.player-wrapper iframe'
 };
 
 let urls: string[] = gptsUrls ?? [];
@@ -33,22 +35,26 @@ const preNavigationHook = async (requestAsBrowserOptions: any) => {
 
 const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
     // Utiliza los selectores actualizados para extraer la información
-    const title = $(selectors.title).text();
-    const description = $(selectors.description).text();
-    const category = $(selectors.category).text();
-    const update = $(selectors.update).text();
-    const tag = $(selectors.tag).text();
-    const videoUrl = $(selectors.video).find('video').attr('src'); // Asumiendo que quieres la URL del video
-    const detail = $(selectors.detail).text();
+   const logoUrl = $('img.object-fill').attr('src');
+    const description = $('p.mt-2.text-slate-600').text();
+    const category = $('.mt-2 a.hover\\:underline').text();
+    const update = $('div.rounded-full:nth-of-type(1)').text();
+    const trial = $('div.rounded-full:nth-of-type(2)').text();
+    const linkToTool = $('button.bg-ice-500.rounded-full.flex').attr('href');
+    const favorites = $('button.hover\\:bg-ice-600.border').text();
+    const detail = $('.mx-auto div div.mx-auto.px-4').text();
+    const videoUrl = $(selectors.videoIframe).attr('src');
 
     const data = {
-        title,
+        logoUrl,
         description,
         category,
         update,
-        tag,
-        videoUrl,
+        trial,
+        linkToTool,
+        favorites,
         detail,
+        videoUrl,
         url: request.loadedUrl
     };
     await Actor.pushData(data);
