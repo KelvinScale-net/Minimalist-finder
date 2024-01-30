@@ -13,15 +13,13 @@ await Actor.init();
 const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
 
 const selectors = {
-    logo: 'img.object-fill',
-    description: 'p.mt-2.text-slate-600',
-    category: '.mt-2 a.hover\\:underline',
-    update: 'div.rounded-full:nth-of-type(1)',
-    trial: 'div.rounded-full:nth-of-type(2)',
-    linkToTool: 'button.bg-ice-500.rounded-full.flex',
-    favorites: 'button.hover\\:bg-ice-600.border',
-    detail: '.mx-auto div div.mx-auto.px-4',
-    videoIframe: '.player-wrapper iframe'
+    brandName: "tr:contains('Brand Name') th",
+    anyasNotes: "tr:contains('Anya's Notes') td",
+    availableSizes: "tr:contains('Available Sizes') td",
+    pricing: "tr:contains('Pricing') td",
+    returns: "tr:contains('Returns') td",
+    features: "tr:contains('Features') td",
+    availableFrom: "div.col-md-8"
 };
 
 let urls: string[] = gptsUrls ?? [];
@@ -35,26 +33,22 @@ const preNavigationHook = async (requestAsBrowserOptions: any) => {
 
 const requestHandler = async ({ $, request }: { $: CheerioRoot, request: Request }): Promise<void> => {
     // Utiliza los selectores actualizados para extraer la información
-   const logoUrl = $('img.object-fill').attr('src');
-    const description = $('p.mt-2.text-slate-600').text();
-    const category = $('.mt-2 a.hover\\:underline').text();
-    const update = $('div.rounded-full:nth-of-type(1)').text();
-    const trial = $('div.rounded-full:nth-of-type(2)').text();
-    const linkToTool = $('button.bg-ice-500.rounded-full.flex').attr('href');
-    const favorites = $('button.hover\\:bg-ice-600.border').text();
-    const detail = $('.mx-auto div div.mx-auto.px-4').text();
-    const videoUrl = $(selectors.videoIframe).attr('src');
+    const brandName = $(selectors.brandName).text();
+    const anyasNotes = $(selectors.anyasNotes).text();
+    const availableSizes = $(selectors.availableSizes).text();
+    const pricing = $(selectors.pricing).text();
+    const returns = $(selectors.returns).text();
+    const features = $(selectors.features).text();
+    const availableFrom = $(selectors.availableFrom).text();
 
     const data = {
-        logoUrl,
-        description,
-        category,
-        update,
-        trial,
-        linkToTool,
-        favorites,
-        detail,
-        videoUrl,
+        brandName,
+        anyasNotes,
+        availableSizes,
+        pricing,
+        returns,
+        features,
+        availableFrom,
         url: request.loadedUrl
     };
     await Actor.pushData(data);
