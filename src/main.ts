@@ -13,7 +13,7 @@ await Actor.init();
 const { maxItems, gptsUrls, proxyConfiguration: proxyConfigurationOptions } = await Actor.getInput<Input>() ?? {} as Input;
 
 const selectors = {
-    brandName: "tr:contains('Brand Name') th",
+    brandName: "tr:contains('Brand Name') td",
     anyasNotes: "tr:contains('Anya's Notes') td",
     availableSizes: "tr:contains('Available Sizes') td",
     pricing: "tr:contains('Pricing') td",
